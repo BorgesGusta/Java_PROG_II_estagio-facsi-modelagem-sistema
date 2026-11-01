@@ -35,7 +35,10 @@ class ValidadorCargaHorariaTest {
         aluno = new Aluno(1L, "Aluno Teste", "000.000.000-00", "aluno@teste.com", "(94) 99999-0000",
                 "2026000000", "Sistemas de Informação", "ATIVO");
         concedente = new Concedente("Empresa Teste", "00.000.000/0001-00");
-        concedente.adicionarConvenio(new Convenio("CONV-TESTE", concedente));
+        Convenio convenio = new Convenio("CONV-TESTE", concedente);
+        convenio.setDataInicio(LocalDate.of(2026, 1, 1));
+        convenio.setDataFim(LocalDate.of(2030, 12, 31));
+        concedente.adicionarConvenio(convenio);
     }
 
     @Test
@@ -144,7 +147,10 @@ class ValidadorCargaHorariaTest {
         termo.setValorAuxilioTransporte(new BigDecimal("200.00"));
         estagio.setTermoCompromisso(termo);
         estagio.adicionarPlanoAtividades(new PlanoAtividades(estagio, "Desenvolvimento de Software"));
-        estagio.adicionarApolice(new ApoliceSeguro("AP-TESTE", "Seguradora Teste"));
+        ApoliceSeguro apolice = new ApoliceSeguro("AP-TESTE", "Seguradora Teste");
+        apolice.setDataInicio(LocalDate.of(2026, 1, 1));
+        apolice.setDataFim(LocalDate.of(2026, 12, 31));
+        estagio.adicionarApolice(apolice);
 
         assertTrue(estagio.iniciar(), "O estágio de teste deveria iniciar com a documentação completa");
         return estagio;

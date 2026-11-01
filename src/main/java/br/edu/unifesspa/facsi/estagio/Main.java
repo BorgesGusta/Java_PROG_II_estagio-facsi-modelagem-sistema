@@ -401,6 +401,8 @@ public class Main {
         estagio.adicionarPlanoAtividades(new PlanoAtividades(estagio, "Desenvolvimento de Software"));
 
         ApoliceSeguro apolice = new ApoliceSeguro("AP-000001", "Seguradora Exemplo");
+        apolice.setDataInicio(LocalDate.of(2026, 1, 1));
+        apolice.setDataFim(LocalDate.of(2026, 12, 31));
         apolice.adicionarEstagio(estagio);
         estagio.adicionarApolice(apolice);
         return estagio;

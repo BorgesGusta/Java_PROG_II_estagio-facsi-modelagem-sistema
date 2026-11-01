@@ -19,6 +19,13 @@ public class ApoliceSeguro {
         this.seguradora = seguradora;
     }
 
+    public boolean estaVigenteEm(LocalDate data) {
+        if (data == null || dataInicio == null || dataFim == null) {
+            return false;
+        }
+        return !data.isBefore(dataInicio) && !data.isAfter(dataFim);
+    }
+
     public void adicionarEstagio(Estagio estagio) {
         this.estagios.add(estagio);
     }

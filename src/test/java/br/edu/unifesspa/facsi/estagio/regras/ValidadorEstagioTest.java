@@ -42,6 +42,8 @@ class ValidadorEstagioTest {
                 "2026000000", "Sistemas de Informação", "ATIVO");
         concedente = new Concedente("Empresa Teste", "00.000.000/0001-00");
         convenio = new Convenio("CONV-TESTE", concedente);
+        convenio.setDataInicio(LocalDate.of(2026, 1, 1));
+        convenio.setDataFim(LocalDate.of(2030, 12, 31));
         concedente.adicionarConvenio(convenio);
     }
 
@@ -192,6 +194,145 @@ class ValidadorEstagioTest {
         assertNull(estagio.getDataFimReal());
     }
 
+    @Test
+    void naoDevePermitirIniciarSemDataDeInicio() {
+        Estagio estagio = criarEstagioComDocumentos(ModalidadeEstagio.OBRIGATORIO, AmbitoEstagio.EXTERNO);
+        estagio.setDataInicio(null);
+
+        assertFalse(ValidadorEstagio.podeIniciar(estagio));
+    }
+
+    @Test
+    void naoDevePermitirIniciarSemDataDeFimPrevista() {
+        Estagio estagio = criarEstagioComDocumentos(ModalidadeEstagio.OBRIGATORIO, AmbitoEstagio.EXTERNO);
+        estagio.setDataFimPrevista(null);
+
+        assertFalse(ValidadorEstagio.podeIniciar(estagio));
+    }
+
+    @Test
+    void naoDevePermitirIniciarComFimPrevistoAnteriorAoInicio() {
+        Estagio estagio = criarEstagioComDocumentos(ModalidadeEstagio.OBRIGATORIO, AmbitoEstagio.EXTERNO);
+        estagio.setDataFimPrevista(DATA_INICIO.minusDays(1));
+
+        assertFalse(ValidadorEstagio.podeIniciar(estagio));
+    }
+
+    @Test
+    void devePermitirIniciarComPeriodoValido() {
+        Estagio estagio = criarEstagioComDocumentos(ModalidadeEstagio.OBRIGATORIO, AmbitoEstagio.EXTERNO);
+        estagio.setDataFimPrevista(DATA_INICIO);
+
+        assertTrue(ValidadorEstagio.podeIniciar(estagio));
+    }
+
+    @Test
+    void devePermitirIniciarEstagioExternoComConvenioVigente() {
+        Estagio estagio = criarEstagioComDocumentos(ModalidadeEstagio.OBRIGATORIO, AmbitoEstagio.EXTERNO);
+
+        assertTrue(convenio.estaVigenteEm(DATA_INICIO));
+        assertTrue(ValidadorEstagio.podeIniciar(estagio));
+    }
+
+    @Test
+    void naoDevePermitirIniciarEstagioExternoComConvenioVencido() {
+        Estagio estagio = criarEstagioComDocumentos(ModalidadeEstagio.OBRIGATORIO, AmbitoEstagio.EXTERNO);
+        convenio.setDataInicio(LocalDate.of(2021, 1, 1));
+        convenio.setDataFim(DATA_INICIO.minusDays(1));
+
+        assertFalse(ValidadorEstagio.podeIniciar(estagio));
+    }
+
+    @Test
+    void naoDevePermitirIniciarEstagioExternoComConvenioQueAindaNaoComecou() {
+        Estagio estagio = criarEstagioComDocumentos(ModalidadeEstagio.OBRIGATORIO, AmbitoEstagio.EXTERNO);
+        convenio.setDataInicio(DATA_INICIO.plusDays(1));
+
+        assertFalse(ValidadorEstagio.podeIniciar(estagio));
+    }
+
+    @Test
+    void naoDevePermitirIniciarSemApolice() {
+        Estagio estagio = criarEstagioComDocumentos(ModalidadeEstagio.OBRIGATORIO, AmbitoEstagio.EXTERNO);
+        estagio.getApolices().clear();
+
+        assertFalse(ValidadorEstagio.podeIniciar(estagio));
+    }
+
+    @Test
+    void naoDevePermitirIniciarComApoliceVencida() {
+        Estagio estagio = criarEstagioComDocumentos(ModalidadeEstagio.OBRIGATORIO, AmbitoEstagio.EXTERNO);
+        estagio.getApolices().clear();
+        estagio.adicionarApolice(criarApolice(LocalDate.of(2025, 1, 1), DATA_INICIO.minusDays(1)));
+
+        assertFalse(ValidadorEstagio.podeIniciar(estagio));
+    }
+
+    @Test
+    void naoDevePermitirIniciarComApoliceQueComecaDepoisDoEstagio() {
+        Estagio estagio = criarEstagioComDocumentos(ModalidadeEstagio.OBRIGATORIO, AmbitoEstagio.EXTERNO);
+        estagio.getApolices().clear();
+        estagio.adicionarApolice(criarApolice(DATA_INICIO.plusDays(1), LocalDate.of(2026, 12, 31)));
+
+        assertFalse(ValidadorEstagio.podeIniciar(estagio));
+    }
+
+    @Test
+    void naoDevePermitirIniciarComApoliceSemDatas() {
+        Estagio estagio = criarEstagioComDocumentos(ModalidadeEstagio.OBRIGATORIO, AmbitoEstagio.EXTERNO);
+        estagio.getApolices().clear();
+        estagio.adicionarApolice(new ApoliceSeguro("AP-SEM-DATAS", "Seguradora Teste"));
+
+        assertFalse(ValidadorEstagio.podeIniciar(estagio));
+    }
+
+    @Test
+    void devePermitirIniciarQuandoAoMenosUmaApoliceEstiverVigente() {
+        Estagio estagio = criarEstagioComDocumentos(ModalidadeEstagio.OBRIGATORIO, AmbitoEstagio.EXTERNO);
+        estagio.getApolices().clear();
+        estagio.adicionarApolice(criarApolice(LocalDate.of(2025, 1, 1), DATA_INICIO.minusDays(1)));
+        estagio.adicionarApolice(criarApolice(DATA_INICIO, LocalDate.of(2026, 12, 31)));
+
+        assertTrue(ValidadorEstagio.podeIniciar(estagio));
+    }
+
+    @Test
+    void encerrarComDataAnteriorAoInicioNaoDeveAlterarStatusNemDataFimReal() {
+        Estagio estagio = criarEstagioProntoParaEncerrar();
+
+        assertFalse(estagio.encerrar(DATA_INICIO.minusDays(1)));
+        assertEquals(StatusEstagio.ATIVO, estagio.getStatus());
+        assertNull(estagio.getDataFimReal());
+    }
+
+    @Test
+    void encerrarComDataAnteriorAoUltimoRegistroNaoDeveAlterarStatusNemDataFimReal() {
+        Estagio estagio = criarEstagioProntoParaEncerrar();
+
+        assertFalse(estagio.encerrar(ultimoDiaDeAtividade(estagio).minusDays(1)));
+        assertEquals(StatusEstagio.ATIVO, estagio.getStatus());
+        assertNull(estagio.getDataFimReal());
+    }
+
+    @Test
+    void devePermitirEncerrarNaDataDoUltimoRegistro() {
+        Estagio estagio = criarEstagioProntoParaEncerrar();
+        LocalDate dataDoUltimoRegistro = ultimoDiaDeAtividade(estagio);
+
+        assertTrue(estagio.encerrar(dataDoUltimoRegistro));
+        assertEquals(dataDoUltimoRegistro, estagio.getDataFimReal());
+    }
+
+    @Test
+    void devePermitirEncerrarDepoisDoUltimoRegistro() {
+        Estagio estagio = criarEstagioProntoParaEncerrar();
+        LocalDate dataPosterior = ultimoDiaDeAtividade(estagio).plusDays(3);
+
+        assertTrue(estagio.encerrar(dataPosterior));
+        assertEquals(StatusEstagio.ENCERRADO, estagio.getStatus());
+        assertEquals(dataPosterior, estagio.getDataFimReal());
+    }
+
     private Estagio criarEstagio(ModalidadeEstagio modalidade, AmbitoEstagio ambito) {
         Estagio estagio = new Estagio(aluno, concedente, modalidade, OrigemEstagio.CONTATO_DIRETO, ambito);
         estagio.setDataInicio(DATA_INICIO);
@@ -209,8 +350,15 @@ class ValidadorEstagioTest {
         termo.setValorAuxilioTransporte(new BigDecimal("200.00"));
         estagio.setTermoCompromisso(termo);
         estagio.adicionarPlanoAtividades(new PlanoAtividades(estagio, "Desenvolvimento de Software"));
-        estagio.adicionarApolice(new ApoliceSeguro("AP-TESTE", "Seguradora Teste"));
+        estagio.adicionarApolice(criarApolice(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31)));
         return estagio;
+    }
+
+    private ApoliceSeguro criarApolice(LocalDate dataInicio, LocalDate dataFim) {
+        ApoliceSeguro apolice = new ApoliceSeguro("AP-TESTE", "Seguradora Teste");
+        apolice.setDataInicio(dataInicio);
+        apolice.setDataFim(dataFim);
+        return apolice;
     }
 
     private Estagio criarEstagioAtivoObrigatorio() {

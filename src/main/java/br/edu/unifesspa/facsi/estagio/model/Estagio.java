@@ -72,12 +72,33 @@ public class Estagio {
     }
 
     public boolean encerrar(LocalDate dataFimReal) {
-        if (dataFimReal == null || !ValidadorEstagio.podeEncerrar(this)) {
+        if (!dataFimRealEhCoerente(dataFimReal) || !ValidadorEstagio.podeEncerrar(this)) {
             return false;
         }
         this.status = StatusEstagio.ENCERRADO;
         this.dataFimReal = dataFimReal;
         return true;
+    }
+
+    private boolean dataFimRealEhCoerente(LocalDate dataFimReal) {
+        if (dataFimReal == null) {
+            return false;
+        }
+        if (dataInicio != null && dataFimReal.isBefore(dataInicio)) {
+            return false;
+        }
+        LocalDate dataDoUltimoRegistro = obterDataDoUltimoRegistro();
+        return dataDoUltimoRegistro == null || !dataFimReal.isBefore(dataDoUltimoRegistro);
+    }
+
+    private LocalDate obterDataDoUltimoRegistro() {
+        LocalDate maiorData = null;
+        for (RegistroFrequencia registro : registrosFrequencia) {
+            if (maiorData == null || registro.getData().isAfter(maiorData)) {
+                maiorData = registro.getData();
+            }
+        }
+        return maiorData;
     }
 
     public void adicionarPlanoAtividades(PlanoAtividades plano) {
