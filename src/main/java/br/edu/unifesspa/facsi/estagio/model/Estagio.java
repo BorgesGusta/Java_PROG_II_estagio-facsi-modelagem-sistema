@@ -30,6 +30,8 @@ public class Estagio {
     private Vaga vaga;
     private Candidatura candidatura;
     private TermoCompromisso termoCompromisso;
+    private RelatorioFinal relatorioFinal;
+    private AvaliacaoEstagio avaliacaoEstagio;
 
     // Papéis exercidos por pessoas no estágio
     private Pessoa supervisor;
@@ -194,6 +196,22 @@ public class Estagio {
 
     public void setTermoCompromisso(TermoCompromisso termoCompromisso) {
         this.termoCompromisso = termoCompromisso;
+    }
+
+    public RelatorioFinal getRelatorioFinal() {
+        return relatorioFinal;
+    }
+
+    public void setRelatorioFinal(RelatorioFinal relatorioFinal) {
+        this.relatorioFinal = relatorioFinal;
+    }
+
+    public AvaliacaoEstagio getAvaliacaoEstagio() {
+        return avaliacaoEstagio;
+    }
+
+    public void setAvaliacaoEstagio(AvaliacaoEstagio avaliacaoEstagio) {
+        this.avaliacaoEstagio = avaliacaoEstagio;
     }
 
     public Pessoa getSupervisor() {

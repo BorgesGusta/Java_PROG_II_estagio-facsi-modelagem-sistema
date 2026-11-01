@@ -5,6 +5,7 @@ import br.edu.unifesspa.facsi.estagio.enums.OrigemEstagio;
 import br.edu.unifesspa.facsi.estagio.enums.StatusEstagio;
 import br.edu.unifesspa.facsi.estagio.model.Aluno;
 import br.edu.unifesspa.facsi.estagio.model.ApoliceSeguro;
+import br.edu.unifesspa.facsi.estagio.model.AvaliacaoEstagio;
 import br.edu.unifesspa.facsi.estagio.model.Candidatura;
 import br.edu.unifesspa.facsi.estagio.model.Concedente;
 import br.edu.unifesspa.facsi.estagio.model.Convenio;
@@ -13,6 +14,7 @@ import br.edu.unifesspa.facsi.estagio.model.PlanoAtividades;
 import br.edu.unifesspa.facsi.estagio.model.Professor;
 import br.edu.unifesspa.facsi.estagio.model.Profissional;
 import br.edu.unifesspa.facsi.estagio.model.RegistroFrequencia;
+import br.edu.unifesspa.facsi.estagio.model.RelatorioFinal;
 import br.edu.unifesspa.facsi.estagio.model.TermoCompromisso;
 import br.edu.unifesspa.facsi.estagio.model.Vaga;
 
@@ -89,7 +91,7 @@ public class Main {
         // 7. Estágio
         Estagio estagio = new Estagio(aluno, concedente, ModalidadeEstagio.OBRIGATORIO, OrigemEstagio.VAGA_PUBLICADA);
         estagio.setId(1L);
-        estagio.setStatus(StatusEstagio.EM_FORMALIZACAO);
+        estagio.setStatus(StatusEstagio.ATIVO);
         estagio.setDataInicio(LocalDate.of(2026, 3, 1));
         estagio.setDataFimPrevista(LocalDate.of(2026, 8, 31));
         estagio.setCargaHorariaDiaria(6);
@@ -141,6 +143,23 @@ public class Main {
         estagio.adicionarRegistroFrequencia(registro2);
         estagio.adicionarRegistroFrequencia(registro3);
 
+        // Relatório final (Sprint 02)
+        RelatorioFinal relatorio = new RelatorioFinal(
+                estagio, "Desenvolvimento de módulo de cadastro em Java", LocalDate.of(2026, 9, 5));
+        relatorio.setId(1L);
+        relatorio.setObjetivos("Aplicar Orientação a Objetos no desenvolvimento de um sistema real");
+        relatorio.setAtividadesRealizadas("Configuração do ambiente, estudo da arquitetura e correção de bugs");
+        relatorio.setConclusao("O estágio permitiu consolidar os conhecimentos de Programação II");
+        estagio.setRelatorioFinal(relatorio);
+
+        // Avaliação do estágio (Sprint 02)
+        AvaliacaoEstagio avaliacao = new AvaliacaoEstagio(estagio, LocalDate.of(2026, 9, 15));
+        avaliacao.setId(1L);
+        avaliacao.setParecerSupervisor("Estagiário proativo e com boa evolução técnica");
+        avaliacao.setParecerOrientador("Relatório bem estruturado e coerente com o plano de atividades");
+        avaliacao.setResultado("APROVADO");
+        estagio.setAvaliacaoEstagio(avaliacao);
+
         // 12. Demonstração
         System.out.println("=== Estágio #" + estagio.getId() + " ===");
         System.out.println("Aluno: " + estagio.getAluno().getNome() + " (" + estagio.getAluno().getMatricula() + ")");
@@ -167,5 +186,10 @@ public class Main {
         System.out.println("Horas realizadas: " + estagio.calcularHorasRealizadas());
         System.out.println("Primeira atividade: " + estagio.getRegistrosFrequencia().get(0).getData()
                 + " - " + estagio.getRegistrosFrequencia().get(0).getDescricaoAtividade());
+        System.out.println("Relatório final entregue em: " + estagio.getRelatorioFinal().getDataEntrega());
+        System.out.println("Tema do relatório: " + estagio.getRelatorioFinal().getTemaObjeto());
+        System.out.println("Resultado da avaliação: " + estagio.getAvaliacaoEstagio().getResultado());
+        System.out.println("Parecer do supervisor: " + estagio.getAvaliacaoEstagio().getParecerSupervisor());
+        System.out.println("Status do estágio (sem encerramento automático): " + estagio.getStatus());
     }
 }
