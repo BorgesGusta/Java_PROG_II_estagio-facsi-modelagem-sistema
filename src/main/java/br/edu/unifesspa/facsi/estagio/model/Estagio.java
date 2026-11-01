@@ -1,8 +1,10 @@
 package br.edu.unifesspa.facsi.estagio.model;
 
+import br.edu.unifesspa.facsi.estagio.enums.AmbitoEstagio;
 import br.edu.unifesspa.facsi.estagio.enums.ModalidadeEstagio;
 import br.edu.unifesspa.facsi.estagio.enums.OrigemEstagio;
 import br.edu.unifesspa.facsi.estagio.enums.StatusEstagio;
+import br.edu.unifesspa.facsi.estagio.regras.ValidadorEstagio;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -17,6 +19,7 @@ public class Estagio {
     private Long id;
     private ModalidadeEstagio modalidade;
     private OrigemEstagio origem;
+    private AmbitoEstagio ambito;
     private LocalDate dataInicio;
     private LocalDate dataFimPrevista;
     private LocalDate dataFimReal;
@@ -45,11 +48,36 @@ public class Estagio {
     private List<ApoliceSeguro> apolices = new ArrayList<>();
     private List<RegistroFrequencia> registrosFrequencia = new ArrayList<>();
 
-    public Estagio(Aluno aluno, Concedente concedente, ModalidadeEstagio modalidade, OrigemEstagio origem) {
+    public Estagio(
+            Aluno aluno,
+            Concedente concedente,
+            ModalidadeEstagio modalidade,
+            OrigemEstagio origem,
+            AmbitoEstagio ambito
+    ) {
         this.aluno = aluno;
         this.concedente = concedente;
         this.modalidade = modalidade;
         this.origem = origem;
+        this.ambito = ambito;
+        this.status = StatusEstagio.EM_FORMALIZACAO;
+    }
+
+    public boolean iniciar() {
+        if (!ValidadorEstagio.podeIniciar(this)) {
+            return false;
+        }
+        this.status = StatusEstagio.ATIVO;
+        return true;
+    }
+
+    public boolean encerrar(LocalDate dataFimReal) {
+        if (dataFimReal == null || !ValidadorEstagio.podeEncerrar(this)) {
+            return false;
+        }
+        this.status = StatusEstagio.ENCERRADO;
+        this.dataFimReal = dataFimReal;
+        return true;
     }
 
     public void adicionarPlanoAtividades(PlanoAtividades plano) {
@@ -162,6 +190,14 @@ public class Estagio {
         this.origem = origem;
     }
 
+    public AmbitoEstagio getAmbito() {
+        return ambito;
+    }
+
+    public void setAmbito(AmbitoEstagio ambito) {
+        this.ambito = ambito;
+    }
+
     public LocalDate getDataInicio() {
         return dataInicio;
     }
@@ -212,10 +248,6 @@ public class Estagio {
 
     public StatusEstagio getStatus() {
         return status;
-    }
-
-    public void setStatus(StatusEstagio status) {
-        this.status = status;
     }
 
     public Aluno getAluno() {
