@@ -4,11 +4,15 @@ import br.edu.unifesspa.facsi.estagio.enums.ModalidadeEstagio;
 import br.edu.unifesspa.facsi.estagio.enums.OrigemEstagio;
 import br.edu.unifesspa.facsi.estagio.enums.StatusEstagio;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Estagio {
+
+    public static final int LIMITE_HORAS_DIARIAS = 6;
+    public static final int LIMITE_HORAS_SEMANAIS = 30;
 
     private Long id;
     private ModalidadeEstagio modalidade;
@@ -68,6 +72,70 @@ public class Estagio {
             }
         }
         return total;
+    }
+
+    public int calcularHorasNaData(LocalDate data) {
+        int total = 0;
+        for (RegistroFrequencia registro : registrosFrequencia) {
+            if (registro.getData().equals(data) && registro.getQuantidadeHoras() != null) {
+                total += registro.getQuantidadeHoras();
+            }
+        }
+        return total;
+    }
+
+    public int calcularHorasNaSemana(LocalDate dataReferencia) {
+        int total = 0;
+        for (RegistroFrequencia registro : registrosFrequencia) {
+            if (estaoNaMesmaSemana(registro.getData(), dataReferencia) && registro.getQuantidadeHoras() != null) {
+                total += registro.getQuantidadeHoras();
+            }
+        }
+        return total;
+    }
+
+    public boolean respeitaLimiteDiario() {
+        for (RegistroFrequencia registro : registrosFrequencia) {
+            if (calcularHorasNaData(registro.getData()) > LIMITE_HORAS_DIARIAS) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean respeitaLimiteSemanal() {
+        for (RegistroFrequencia registro : registrosFrequencia) {
+            if (calcularHorasNaSemana(registro.getData()) > LIMITE_HORAS_SEMANAIS) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // Semana considerada de segunda a domingo (padrão ISO-8601).
+    public static boolean estaoNaMesmaSemana(LocalDate data, LocalDate outraData) {
+        return data.with(DayOfWeek.MONDAY).equals(outraData.with(DayOfWeek.MONDAY));
+    }
+
+    // Sem data definida, o período é tratado como aberto para que as regras de simultaneidade não sejam contornadas.
+    public LocalDate getInicioPeriodo() {
+        return dataInicio != null ? dataInicio : LocalDate.MIN;
+    }
+
+    public LocalDate getFimPeriodo() {
+        if (dataFimReal != null) {
+            return dataFimReal;
+        }
+        return dataFimPrevista != null ? dataFimPrevista : LocalDate.MAX;
+    }
+
+    public boolean estaVigenteEm(LocalDate data) {
+        return !data.isBefore(getInicioPeriodo()) && !data.isAfter(getFimPeriodo());
+    }
+
+    public boolean possuiPeriodoSobreposto(Estagio outro) {
+        return !getInicioPeriodo().isAfter(outro.getFimPeriodo())
+                && !outro.getInicioPeriodo().isAfter(getFimPeriodo());
     }
 
     public Long getId() {

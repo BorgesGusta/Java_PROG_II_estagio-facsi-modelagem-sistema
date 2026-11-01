@@ -17,9 +17,12 @@ import br.edu.unifesspa.facsi.estagio.model.RegistroFrequencia;
 import br.edu.unifesspa.facsi.estagio.model.RelatorioFinal;
 import br.edu.unifesspa.facsi.estagio.model.TermoCompromisso;
 import br.edu.unifesspa.facsi.estagio.model.Vaga;
+import br.edu.unifesspa.facsi.estagio.regras.ValidadorCargaHoraria;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Main {
 
@@ -191,5 +194,120 @@ public class Main {
         System.out.println("Resultado da avaliação: " + estagio.getAvaliacaoEstagio().getResultado());
         System.out.println("Parecer do supervisor: " + estagio.getAvaliacaoEstagio().getParecerSupervisor());
         System.out.println("Status do estágio (sem encerramento automático): " + estagio.getStatus());
+
+        System.out.println();
+        System.out.println("=== Cenário válido ===");
+        LocalDate inicioSemestre = LocalDate.of(2026, 3, 1);
+        LocalDate fimSemestre = LocalDate.of(2026, 6, 30);
+        Estagio estagioValido = criarEstagio(aluno, concedente, ModalidadeEstagio.OBRIGATORIO, StatusEstagio.ATIVO,
+                inicioSemestre, fimSemestre);
+        registrarHoras(estagioValido, LocalDate.of(2026, 3, 9), 4);
+        registrarHoras(estagioValido, LocalDate.of(2026, 3, 10), 5);
+        imprimirLimites(estagioValido);
+
+        System.out.println();
+        System.out.println("=== Cenário inválido diário (7h em 2026-03-09) ===");
+        Estagio estagioExcessoDiario = criarEstagio(aluno, concedente, ModalidadeEstagio.OBRIGATORIO, StatusEstagio.ATIVO,
+                inicioSemestre, fimSemestre);
+        registrarHoras(estagioExcessoDiario, LocalDate.of(2026, 3, 9), 4);
+        registrarHoras(estagioExcessoDiario, LocalDate.of(2026, 3, 9), 3);
+        imprimirLimites(estagioExcessoDiario);
+
+        System.out.println();
+        System.out.println("=== Cenário inválido semanal (6h por dia de segunda a sábado) ===");
+        Estagio estagioExcessoSemanal = criarEstagio(aluno, concedente, ModalidadeEstagio.OBRIGATORIO, StatusEstagio.ATIVO,
+                inicioSemestre, fimSemestre);
+        LocalDate segundaFeira = LocalDate.of(2026, 3, 9);
+        for (int dia = 0; dia < 6; dia++) {
+            registrarHoras(estagioExcessoSemanal, segundaFeira.plusDays(dia), 6);
+        }
+        System.out.println("Horas na semana: " + estagioExcessoSemanal.calcularHorasNaSemana(segundaFeira));
+        imprimirLimites(estagioExcessoSemanal);
+
+        System.out.println();
+        System.out.println("=== Estágios simultâneos do mesmo aluno ===");
+        Estagio estagioNaoObrigatorio = criarEstagio(aluno, concedente, ModalidadeEstagio.NAO_OBRIGATORIO, StatusEstagio.ATIVO,
+                inicioSemestre, fimSemestre);
+        registrarHoras(estagioNaoObrigatorio, LocalDate.of(2026, 3, 5), 6);
+        registrarHoras(estagioNaoObrigatorio, LocalDate.of(2026, 3, 6), 6);
+        List<Estagio> estagiosDoAluno = new ArrayList<>(List.of(estagio, estagioNaoObrigatorio));
+        imprimirLimitesSimultaneos(aluno, estagiosDoAluno);
+
+        System.out.println("-- Após registrar 3h em 2026-03-04 no estágio não obrigatório --");
+        registrarHoras(estagioNaoObrigatorio, LocalDate.of(2026, 3, 4), 3);
+        imprimirLimitesSimultaneos(aluno, estagiosDoAluno);
+
+        System.out.println();
+        System.out.println("=== Limite de estágios não obrigatórios simultâneos ===");
+        Estagio segundoNaoObrigatorio = criarEstagio(aluno, concedente, ModalidadeEstagio.NAO_OBRIGATORIO, StatusEstagio.ATIVO,
+                inicioSemestre, fimSemestre);
+        Estagio terceiroNaoObrigatorio = criarEstagio(aluno, concedente, ModalidadeEstagio.NAO_OBRIGATORIO,
+                StatusEstagio.EM_FORMALIZACAO, LocalDate.of(2026, 4, 1), LocalDate.of(2026, 5, 31));
+        estagiosDoAluno.add(segundoNaoObrigatorio);
+        estagiosDoAluno.add(terceiroNaoObrigatorio);
+        System.out.println("Dois ativos e um em formalização: "
+                + ValidadorCargaHoraria.respeitaLimiteEstagiosNaoObrigatorios(aluno, estagiosDoAluno));
+
+        terceiroNaoObrigatorio.setStatus(StatusEstagio.ATIVO);
+        System.out.println("Três ativos: "
+                + ValidadorCargaHoraria.respeitaLimiteEstagiosNaoObrigatorios(aluno, estagiosDoAluno));
+
+        System.out.println();
+        System.out.println("=== Estágios ativos sem sobreposição de período ===");
+        Estagio estagioPrimeiroSemestre = criarEstagio(aluno, concedente, ModalidadeEstagio.NAO_OBRIGATORIO,
+                StatusEstagio.ATIVO, LocalDate.of(2026, 3, 1), LocalDate.of(2026, 6, 30));
+        Estagio estagioSegundoSemestre = criarEstagio(aluno, concedente, ModalidadeEstagio.NAO_OBRIGATORIO,
+                StatusEstagio.ATIVO, LocalDate.of(2026, 7, 1), LocalDate.of(2026, 8, 31));
+        registrarHoras(estagioPrimeiroSemestre, LocalDate.of(2026, 3, 9), 6);
+        registrarHoras(estagioSegundoSemestre, LocalDate.of(2026, 7, 6), 6);
+        List<Estagio> estagiosEmPeriodosDiferentes = List.of(estagioPrimeiroSemestre, estagioSegundoSemestre);
+        System.out.println("Períodos sobrepostos: "
+                + estagioPrimeiroSemestre.possuiPeriodoSobreposto(estagioSegundoSemestre));
+        imprimirLimitesSimultaneos(aluno, estagiosEmPeriodosDiferentes);
+
+        System.out.println();
+        System.out.println("=== Três não obrigatórios que nunca estão ativos ao mesmo tempo ===");
+        Estagio estagioA = criarEstagio(aluno, concedente, ModalidadeEstagio.NAO_OBRIGATORIO,
+                StatusEstagio.ATIVO, LocalDate.of(2026, 3, 1), LocalDate.of(2026, 6, 30));
+        Estagio estagioB = criarEstagio(aluno, concedente, ModalidadeEstagio.NAO_OBRIGATORIO,
+                StatusEstagio.ATIVO, LocalDate.of(2026, 5, 1), LocalDate.of(2026, 8, 31));
+        Estagio estagioC = criarEstagio(aluno, concedente, ModalidadeEstagio.NAO_OBRIGATORIO,
+                StatusEstagio.ATIVO, LocalDate.of(2026, 7, 1), LocalDate.of(2026, 10, 31));
+        System.out.println("A e B sobrepostos: " + estagioA.possuiPeriodoSobreposto(estagioB));
+        System.out.println("B e C sobrepostos: " + estagioB.possuiPeriodoSobreposto(estagioC));
+        System.out.println("A e C sobrepostos: " + estagioA.possuiPeriodoSobreposto(estagioC));
+        System.out.println("Limite de não obrigatórios válido: "
+                + ValidadorCargaHoraria.respeitaLimiteEstagiosNaoObrigatorios(aluno, List.of(estagioA, estagioB, estagioC)));
+    }
+
+    private static Estagio criarEstagio(
+            Aluno aluno,
+            Concedente concedente,
+            ModalidadeEstagio modalidade,
+            StatusEstagio status,
+            LocalDate dataInicio,
+            LocalDate dataFimPrevista
+    ) {
+        Estagio estagio = new Estagio(aluno, concedente, modalidade, OrigemEstagio.CONTATO_DIRETO);
+        estagio.setStatus(status);
+        estagio.setDataInicio(dataInicio);
+        estagio.setDataFimPrevista(dataFimPrevista);
+        return estagio;
+    }
+
+    private static void registrarHoras(Estagio estagio, LocalDate data, int horas) {
+        estagio.adicionarRegistroFrequencia(new RegistroFrequencia(data, horas, "Atividade de exemplo", estagio));
+    }
+
+    private static void imprimirLimites(Estagio estagio) {
+        System.out.println("Limite diário válido: " + estagio.respeitaLimiteDiario());
+        System.out.println("Limite semanal válido: " + estagio.respeitaLimiteSemanal());
+    }
+
+    private static void imprimirLimitesSimultaneos(Aluno aluno, List<Estagio> estagios) {
+        System.out.println("Limite diário válido (soma dos estágios): "
+                + ValidadorCargaHoraria.respeitaLimiteDiario(aluno, estagios));
+        System.out.println("Limite semanal válido (soma dos estágios): "
+                + ValidadorCargaHoraria.respeitaLimiteSemanal(aluno, estagios));
     }
 }
