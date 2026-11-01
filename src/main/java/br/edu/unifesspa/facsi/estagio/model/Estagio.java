@@ -37,6 +37,7 @@ public class Estagio {
 
     private List<PlanoAtividades> planosAtividades = new ArrayList<>();
     private List<ApoliceSeguro> apolices = new ArrayList<>();
+    private List<RegistroFrequencia> registrosFrequencia = new ArrayList<>();
 
     public Estagio(Aluno aluno, Concedente concedente, ModalidadeEstagio modalidade, OrigemEstagio origem) {
         this.aluno = aluno;
@@ -51,6 +52,20 @@ public class Estagio {
 
     public void adicionarApolice(ApoliceSeguro apolice) {
         this.apolices.add(apolice);
+    }
+
+    public void adicionarRegistroFrequencia(RegistroFrequencia registro) {
+        this.registrosFrequencia.add(registro);
+    }
+
+    public int calcularHorasRealizadas() {
+        int total = 0;
+        for (RegistroFrequencia registro : registrosFrequencia) {
+            if (registro.getQuantidadeHoras() != null) {
+                total += registro.getQuantidadeHoras();
+            }
+        }
+        return total;
     }
 
     public Long getId() {
@@ -211,5 +226,9 @@ public class Estagio {
 
     public void setApolices(List<ApoliceSeguro> apolices) {
         this.apolices = apolices;
+    }
+
+    public List<RegistroFrequencia> getRegistrosFrequencia() {
+        return registrosFrequencia;
     }
 }

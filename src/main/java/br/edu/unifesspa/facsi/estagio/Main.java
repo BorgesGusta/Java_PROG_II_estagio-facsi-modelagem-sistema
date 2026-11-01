@@ -12,6 +12,7 @@ import br.edu.unifesspa.facsi.estagio.model.Estagio;
 import br.edu.unifesspa.facsi.estagio.model.PlanoAtividades;
 import br.edu.unifesspa.facsi.estagio.model.Professor;
 import br.edu.unifesspa.facsi.estagio.model.Profissional;
+import br.edu.unifesspa.facsi.estagio.model.RegistroFrequencia;
 import br.edu.unifesspa.facsi.estagio.model.TermoCompromisso;
 import br.edu.unifesspa.facsi.estagio.model.Vaga;
 
@@ -126,6 +127,20 @@ public class Main {
         apolice.adicionarEstagio(estagio);
         estagio.adicionarApolice(apolice);
 
+        // Registros de frequência (Sprint 02)
+        RegistroFrequencia registro1 = new RegistroFrequencia(
+                LocalDate.of(2026, 3, 2), 6, "Configuração do ambiente de desenvolvimento", estagio);
+        registro1.setId(1L);
+        RegistroFrequencia registro2 = new RegistroFrequencia(
+                LocalDate.of(2026, 3, 3), 6, "Estudo da arquitetura do sistema da empresa", estagio);
+        registro2.setId(2L);
+        RegistroFrequencia registro3 = new RegistroFrequencia(
+                LocalDate.of(2026, 3, 4), 4, "Correção de bugs no módulo de cadastro", estagio);
+        registro3.setId(3L);
+        estagio.adicionarRegistroFrequencia(registro1);
+        estagio.adicionarRegistroFrequencia(registro2);
+        estagio.adicionarRegistroFrequencia(registro3);
+
         // 12. Demonstração
         System.out.println("=== Estágio #" + estagio.getId() + " ===");
         System.out.println("Aluno: " + estagio.getAluno().getNome() + " (" + estagio.getAluno().getMatricula() + ")");
@@ -148,5 +163,9 @@ public class Main {
         System.out.println("Apólices: " + estagio.getApolices().size()
                 + " - " + estagio.getApolices().get(0).getNumero()
                 + " (cobre " + apolice.getEstagios().size() + " estágio(s))");
+        System.out.println("Registros de frequência: " + estagio.getRegistrosFrequencia().size());
+        System.out.println("Horas realizadas: " + estagio.calcularHorasRealizadas());
+        System.out.println("Primeira atividade: " + estagio.getRegistrosFrequencia().get(0).getData()
+                + " - " + estagio.getRegistrosFrequencia().get(0).getDescricaoAtividade());
     }
 }
