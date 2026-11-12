@@ -109,8 +109,21 @@ public class Estagio {
         this.apolices.add(apolice);
     }
 
-    public void adicionarRegistroFrequencia(RegistroFrequencia registro) {
+    public boolean adicionarRegistroFrequencia(RegistroFrequencia registro) {
+        if (!podeReceberRegistroFrequencia(registro)) {
+            return false;
+        }
         this.registrosFrequencia.add(registro);
+        return true;
+    }
+
+    private boolean podeReceberRegistroFrequencia(RegistroFrequencia registro) {
+        return registro != null
+                && status == StatusEstagio.ATIVO
+                && registro.getData() != null
+                && estaVigenteEm(registro.getData())
+                && registro.getQuantidadeHoras() != null
+                && registro.getQuantidadeHoras() > 0;
     }
 
     public int calcularHorasRealizadas() {

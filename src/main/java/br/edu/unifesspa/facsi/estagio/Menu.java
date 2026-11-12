@@ -10,6 +10,18 @@ public class Menu {
         Scanner scanner = new Scanner(System.in);
         Estagio estagio = DadosExemplo.criarEstagioFormalizado();
 
+        try {
+            executarMenuPrincipal(scanner, estagio);
+        } catch (EntradaEncerradaException e) {
+            System.out.println();
+            System.out.println("Entrada encerrada.");
+            System.out.println("Finalizando o sistema...");
+        }
+
+        scanner.close();
+    }
+
+    private static void executarMenuPrincipal(Scanner scanner, Estagio estagio) {
         int opcao;
         do {
             System.out.println();
@@ -47,8 +59,6 @@ public class Menu {
                     System.out.println("Opção inválida.");
             }
         } while (opcao != 0);
-
-        scanner.close();
     }
 
     private static void exibirInformacoes() {

@@ -124,17 +124,30 @@ public class MenuEstagio {
             horas = lerInteiro(scanner, "Quantidade de horas: ");
         }
 
-        System.out.print("Descrição da atividade: ");
-        String descricao = scanner.nextLine().trim();
+        String descricao = lerTextoObrigatorio(scanner, "Descrição da atividade: ");
 
-        estagio.adicionarRegistroFrequencia(new RegistroFrequencia(data, horas, descricao, estagio));
+        boolean registrado = estagio.adicionarRegistroFrequencia(new RegistroFrequencia(data, horas, descricao, estagio));
 
         System.out.println();
+        if (!registrado) {
+            System.out.println("Frequência não registrada.");
+            System.out.println("A data deve estar dentro do período do estágio: "
+                    + formatarData(estagio.getDataInicio()) + " a " + formatarData(estagio.getDataFimPrevista()) + ".");
+            return;
+        }
+
         System.out.println("Frequência registrada.");
         System.out.println("Horas registradas nesta data: " + estagio.calcularHorasNaData(data));
         System.out.println("Total de horas realizadas: " + estagio.calcularHorasRealizadas());
         System.out.println("Limite diário válido: " + estagio.respeitaLimiteDiario());
         System.out.println("Limite semanal válido: " + estagio.respeitaLimiteSemanal());
+
+        if (estagio.calcularHorasNaData(data) > Estagio.LIMITE_HORAS_DIARIAS) {
+            System.out.println("ATENÇÃO: limite diário de " + Estagio.LIMITE_HORAS_DIARIAS + " horas excedido.");
+        }
+        if (estagio.calcularHorasNaSemana(data) > Estagio.LIMITE_HORAS_SEMANAIS) {
+            System.out.println("ATENÇÃO: limite semanal de " + Estagio.LIMITE_HORAS_SEMANAIS + " horas excedido.");
+        }
     }
 
     private static void consultarHoras(Estagio estagio) {
@@ -177,10 +190,17 @@ public class MenuEstagio {
         System.out.println("Status atual: " + estagio.getStatus());
     }
 
+    static String lerLinha(Scanner scanner) {
+        if (!scanner.hasNextLine()) {
+            throw new EntradaEncerradaException();
+        }
+        return scanner.nextLine();
+    }
+
     static int lerInteiro(Scanner scanner, String mensagem) {
         while (true) {
             System.out.print(mensagem);
-            String entrada = scanner.nextLine().trim();
+            String entrada = lerLinha(scanner).trim();
             try {
                 return Integer.parseInt(entrada);
             } catch (NumberFormatException e) {
@@ -192,13 +212,24 @@ public class MenuEstagio {
     static void pausar(Scanner scanner) {
         System.out.println();
         System.out.println("Pressione ENTER para continuar...");
-        scanner.nextLine();
+        lerLinha(scanner);
+    }
+
+    private static String lerTextoObrigatorio(Scanner scanner, String mensagem) {
+        while (true) {
+            System.out.print(mensagem);
+            String entrada = lerLinha(scanner).trim();
+            if (!entrada.isEmpty()) {
+                return entrada;
+            }
+            System.out.println("O texto não pode ficar vazio.");
+        }
     }
 
     private static LocalDate lerData(Scanner scanner, String mensagem) {
         while (true) {
             System.out.print(mensagem);
-            String entrada = scanner.nextLine().trim();
+            String entrada = lerLinha(scanner).trim();
             try {
                 return LocalDate.parse(entrada, FORMATO_DATA);
             } catch (DateTimeParseException e) {
