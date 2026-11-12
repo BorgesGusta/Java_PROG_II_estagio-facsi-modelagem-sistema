@@ -333,6 +333,76 @@ class ValidadorEstagioTest {
         assertEquals(dataPosterior, estagio.getDataFimReal());
     }
 
+    @Test
+    void deveListarPendenciasAntesDoRelatorioEDaAvaliacao() {
+        Estagio estagio = criarEstagioAtivoObrigatorio();
+        registrarHoras(estagio, DATA_INICIO, 6);
+
+        List<String> pendencias = ValidadorEstagio.listarPendenciasEncerramento(estagio);
+
+        assertEquals(List.of(
+                "Carga horária: 6/170h",
+                "Relatório final: PENDENTE",
+                "Avaliação: PENDENTE",
+                "Resultado aprovado: PENDENTE"), pendencias);
+        assertFalse(ValidadorEstagio.podeEncerrar(estagio));
+    }
+
+    @Test
+    void deveListarStatusEFrequenciaComoPendenciasDeEstagioNaoIniciado() {
+        Estagio estagio = criarEstagioComDocumentos(ModalidadeEstagio.OBRIGATORIO, AmbitoEstagio.EXTERNO);
+
+        List<String> pendencias = ValidadorEstagio.listarPendenciasEncerramento(estagio);
+
+        assertTrue(pendencias.contains("Status: precisa estar ATIVO (atual: EM_FORMALIZACAO)"));
+        assertTrue(pendencias.contains("Registros de frequência: nenhum registro"));
+    }
+
+    @Test
+    void deveListarResultadoNaoAprovadoComoUnicaPendencia() {
+        Estagio estagio = criarEstagioAtivoObrigatorio();
+        registrarSeisHorasPorDiaUtilAteCargaMinima(estagio);
+        anexarRelatorioFinal(estagio);
+        anexarAvaliacao(estagio, "REPROVADO");
+
+        assertEquals(List.of("Resultado aprovado: PENDENTE (resultado atual: REPROVADO)"),
+                ValidadorEstagio.listarPendenciasEncerramento(estagio));
+    }
+
+    @Test
+    void naoDeveHaverPendenciasQuandoEstagioPodeSerEncerrado() {
+        Estagio estagio = criarEstagioProntoParaEncerrar();
+
+        assertTrue(ValidadorEstagio.listarPendenciasEncerramento(estagio).isEmpty());
+        assertTrue(ValidadorEstagio.podeEncerrar(estagio));
+    }
+
+    @Test
+    void deveCalcularHorasQueFaltamParaCargaMinima() {
+        Estagio estagio = criarEstagioAtivoObrigatorio();
+        registrarSeisHorasPorDiaUtilAte(estagio, 120);
+
+        assertEquals(120, estagio.calcularHorasRealizadas());
+        assertEquals(50, ValidadorEstagio.calcularHorasFaltantes(estagio));
+    }
+
+    @Test
+    void naoDeveFaltarHorasDepoisDeAtingirCargaMinima() {
+        Estagio estagio = criarEstagioAtivoObrigatorio();
+        registrarSeisHorasPorDiaUtilAteCargaMinima(estagio);
+
+        assertTrue(estagio.calcularHorasRealizadas() >= ValidadorEstagio.CARGA_HORARIA_MINIMA_OBRIGATORIO);
+        assertEquals(0, ValidadorEstagio.calcularHorasFaltantes(estagio));
+    }
+
+    @Test
+    void naoObrigatorioNaoDeveExigirCargaMinima() {
+        Estagio estagio = criarEstagioComDocumentos(ModalidadeEstagio.NAO_OBRIGATORIO, AmbitoEstagio.EXTERNO);
+
+        assertFalse(ValidadorEstagio.exigeCargaHorariaMinima(estagio));
+        assertEquals(0, ValidadorEstagio.calcularHorasFaltantes(estagio));
+    }
+
     private Estagio criarEstagio(ModalidadeEstagio modalidade, AmbitoEstagio ambito) {
         Estagio estagio = new Estagio(aluno, concedente, modalidade, OrigemEstagio.CONTATO_DIRETO, ambito);
         estagio.setDataInicio(DATA_INICIO);
@@ -380,8 +450,12 @@ class ValidadorEstagioTest {
     }
 
     private void registrarSeisHorasPorDiaUtilAteCargaMinima(Estagio estagio) {
+        registrarSeisHorasPorDiaUtilAte(estagio, ValidadorEstagio.CARGA_HORARIA_MINIMA_OBRIGATORIO);
+    }
+
+    private void registrarSeisHorasPorDiaUtilAte(Estagio estagio, int horasDesejadas) {
         LocalDate dia = DATA_INICIO;
-        while (estagio.calcularHorasRealizadas() < ValidadorEstagio.CARGA_HORARIA_MINIMA_OBRIGATORIO) {
+        while (estagio.calcularHorasRealizadas() < horasDesejadas) {
             if (dia.getDayOfWeek() != DayOfWeek.SATURDAY && dia.getDayOfWeek() != DayOfWeek.SUNDAY) {
                 registrarHoras(estagio, dia, 6);
             }

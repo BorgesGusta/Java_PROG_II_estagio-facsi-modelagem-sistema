@@ -9,6 +9,8 @@ import br.edu.unifesspa.facsi.estagio.model.Estagio;
 import br.edu.unifesspa.facsi.estagio.model.TermoCompromisso;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ValidadorEstagio {
 
@@ -37,6 +39,42 @@ public class ValidadorEstagio {
                 && !estagio.getRegistrosFrequencia().isEmpty()
                 && RESULTADO_APROVADO.equals(estagio.getAvaliacaoEstagio().getResultado())
                 && cumpreCargaHorariaMinima(estagio);
+    }
+
+    public static List<String> listarPendenciasEncerramento(Estagio estagio) {
+        List<String> pendencias = new ArrayList<>();
+        if (estagio.getStatus() != StatusEstagio.ATIVO) {
+            pendencias.add("Status: precisa estar ATIVO (atual: " + estagio.getStatus() + ")");
+        }
+        if (estagio.getRegistrosFrequencia().isEmpty()) {
+            pendencias.add("Registros de frequência: nenhum registro");
+        }
+        if (!cumpreCargaHorariaMinima(estagio)) {
+            pendencias.add("Carga horária: " + estagio.calcularHorasRealizadas() + "/"
+                    + CARGA_HORARIA_MINIMA_OBRIGATORIO + "h");
+        }
+        if (estagio.getRelatorioFinal() == null) {
+            pendencias.add("Relatório final: PENDENTE");
+        }
+        if (estagio.getAvaliacaoEstagio() == null) {
+            pendencias.add("Avaliação: PENDENTE");
+            pendencias.add("Resultado aprovado: PENDENTE");
+        } else if (!RESULTADO_APROVADO.equals(estagio.getAvaliacaoEstagio().getResultado())) {
+            pendencias.add("Resultado aprovado: PENDENTE (resultado atual: "
+                    + estagio.getAvaliacaoEstagio().getResultado() + ")");
+        }
+        return pendencias;
+    }
+
+    public static boolean exigeCargaHorariaMinima(Estagio estagio) {
+        return estagio.getModalidade() == ModalidadeEstagio.OBRIGATORIO;
+    }
+
+    public static int calcularHorasFaltantes(Estagio estagio) {
+        if (!exigeCargaHorariaMinima(estagio)) {
+            return 0;
+        }
+        return Math.max(0, CARGA_HORARIA_MINIMA_OBRIGATORIO - estagio.calcularHorasRealizadas());
     }
 
     public static boolean exigeConvenio(Estagio estagio) {

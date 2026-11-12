@@ -3,20 +3,50 @@ package br.edu.unifesspa.facsi.estagio;
 import br.edu.unifesspa.facsi.estagio.enums.AmbitoEstagio;
 import br.edu.unifesspa.facsi.estagio.enums.ModalidadeEstagio;
 import br.edu.unifesspa.facsi.estagio.enums.OrigemEstagio;
+import br.edu.unifesspa.facsi.estagio.enums.StatusEstagio;
 import br.edu.unifesspa.facsi.estagio.model.Aluno;
 import br.edu.unifesspa.facsi.estagio.model.ApoliceSeguro;
 import br.edu.unifesspa.facsi.estagio.model.Concedente;
 import br.edu.unifesspa.facsi.estagio.model.Convenio;
 import br.edu.unifesspa.facsi.estagio.model.Estagio;
 import br.edu.unifesspa.facsi.estagio.model.PlanoAtividades;
+import br.edu.unifesspa.facsi.estagio.model.RegistroFrequencia;
 import br.edu.unifesspa.facsi.estagio.model.TermoCompromisso;
+import br.edu.unifesspa.facsi.estagio.regras.ValidadorEstagio;
 
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 
 public class DadosExemplo {
 
     private DadosExemplo() {
+    }
+
+    public static int preencherCargaHorariaMinima(Estagio estagio) {
+        if (estagio.getStatus() != StatusEstagio.ATIVO) {
+            return 0;
+        }
+        int registrosAdicionados = 0;
+        LocalDate dia = estagio.getDataInicio();
+
+        while (ValidadorEstagio.calcularHorasFaltantes(estagio) > 0 && !dia.isAfter(estagio.getDataFimPrevista())) {
+            if (dia.getDayOfWeek() != DayOfWeek.SATURDAY && dia.getDayOfWeek() != DayOfWeek.SUNDAY) {
+                int livresNoDia = Estagio.LIMITE_HORAS_DIARIAS - estagio.calcularHorasNaData(dia);
+                int livresNaSemana = Estagio.LIMITE_HORAS_SEMANAIS - estagio.calcularHorasNaSemana(dia);
+                int horas = Math.min(Math.min(livresNoDia, livresNaSemana), ValidadorEstagio.calcularHorasFaltantes(estagio));
+
+                if (horas > 0) {
+                    RegistroFrequencia registro = new RegistroFrequencia(dia, horas, "Atividade de demonstração", estagio);
+                    if (!estagio.adicionarRegistroFrequencia(registro)) {
+                        break;
+                    }
+                    registrosAdicionados++;
+                }
+            }
+            dia = dia.plusDays(1);
+        }
+        return registrosAdicionados;
     }
 
     public static Estagio criarEstagioFormalizado() {
