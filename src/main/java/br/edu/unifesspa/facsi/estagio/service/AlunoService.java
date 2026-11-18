@@ -5,6 +5,7 @@ import br.edu.unifesspa.facsi.estagio.dto.AlunoResponse;
 import br.edu.unifesspa.facsi.estagio.model.Aluno;
 import br.edu.unifesspa.facsi.estagio.repository.AlunoRepository;
 import org.springframework.stereotype.Service;
+import br.edu.unifesspa.facsi.estagio.exception.AlunoNaoEncontradoException;
 
 import java.util.List;
 
@@ -17,7 +18,14 @@ public class AlunoService {
         this.alunoRepository = alunoRepository;
     }
 
-    public AlunoResponse cadastrar(AlunoRequest request) {
+    public AlunoResponse buscarPorId(Long id) {
+        Aluno aluno = alunoRepository.findById(id)
+            .orElseThrow(() -> new AlunoNaoEncontradoException(id));
+
+        return converterParaResponse(aluno);
+    }
+    
+       public AlunoResponse cadastrar(AlunoRequest request) {
         Aluno aluno = new Aluno(
                 null,
                 request.nome(),
