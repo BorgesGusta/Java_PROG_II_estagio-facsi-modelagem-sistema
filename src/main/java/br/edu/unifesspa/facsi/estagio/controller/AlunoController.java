@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PutMapping;
 
 import java.util.List;
 
@@ -38,5 +39,13 @@ public class AlunoController {
     @GetMapping("/{id}")
     public AlunoResponse buscarPorId(@PathVariable Long id) {
         return alunoService.buscarPorId(id);
+    }
+
+    @PutMapping("/{id}")
+    public AlunoResponse atualizar(
+        @PathVariable Long id,
+        @RequestBody AlunoRequest request
+    ) {
+        return alunoService.atualizar(id, request);
     }
 }

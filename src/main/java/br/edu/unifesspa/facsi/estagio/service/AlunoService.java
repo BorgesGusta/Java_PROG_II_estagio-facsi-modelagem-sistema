@@ -24,6 +24,23 @@ public class AlunoService {
 
         return converterParaResponse(aluno);
     }
+
+    public AlunoResponse atualizar(Long id, AlunoRequest request) {
+        Aluno aluno = alunoRepository.findById(id)
+            .orElseThrow(() -> new AlunoNaoEncontradoException(id));
+
+        aluno.setNome(request.nome());
+        aluno.setCpf(request.cpf());
+        aluno.setEmail(request.email());
+        aluno.setTelefone(request.telefone());
+        aluno.setMatricula(request.matricula());
+        aluno.setCurso(request.curso());
+        aluno.setSituacaoAcademica(request.situacaoAcademica());
+
+        Aluno alunoAtualizado = alunoRepository.save(aluno);
+
+        return converterParaResponse(alunoAtualizado);
+}
     
        public AlunoResponse cadastrar(AlunoRequest request) {
         Aluno aluno = new Aluno(
