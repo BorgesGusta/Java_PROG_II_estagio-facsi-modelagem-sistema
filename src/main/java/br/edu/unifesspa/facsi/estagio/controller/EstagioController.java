@@ -1,8 +1,7 @@
 package br.edu.unifesspa.facsi.estagio.controller;
 
-import br.edu.unifesspa.facsi.estagio.DadosExemplo;
 import br.edu.unifesspa.facsi.estagio.dto.EstagioResumoResponse;
-import br.edu.unifesspa.facsi.estagio.model.Estagio;
+import br.edu.unifesspa.facsi.estagio.service.EstagioService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -11,18 +10,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/estagios")
 public class EstagioController {
 
+    private final EstagioService estagioService;
+
+    public EstagioController(EstagioService estagioService) {
+        this.estagioService = estagioService;
+    }
+
     @GetMapping("/exemplo")
     public EstagioResumoResponse exemplo() {
-        Estagio estagio = DadosExemplo.criarEstagioFormalizado();
-
-        return new EstagioResumoResponse(
-                estagio.getId(),
-                estagio.getAluno().getNome(),
-                estagio.getConcedente().getNome(),
-                estagio.getModalidade().name(),
-                estagio.getOrigem().name(),
-                estagio.getAmbito().name(),
-                estagio.getStatus().name()
-        );
+        return estagioService.buscarExemplo();
     }
 }
