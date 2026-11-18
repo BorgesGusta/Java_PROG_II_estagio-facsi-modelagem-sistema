@@ -159,6 +159,59 @@ class ValidadorEstagioTest {
     }
 
     @Test
+    void naoDevePermitirEncerrarQuandoLimiteDiarioForExcedido() {
+        Estagio estagio = criarEstagioAtivoObrigatorio();
+
+        registrarHoras(estagio, DATA_INICIO, 7);
+        for (int dia = 1; dia <= 4; dia++) {
+            registrarHoras(estagio, DATA_INICIO.plusDays(dia), 5);
+        }
+
+        LocalDate dia = DATA_INICIO.plusWeeks(1);
+        while (estagio.calcularHorasRealizadas() < ValidadorEstagio.CARGA_HORARIA_MINIMA_OBRIGATORIO) {
+            if (dia.getDayOfWeek() != DayOfWeek.SATURDAY && dia.getDayOfWeek() != DayOfWeek.SUNDAY) {
+                registrarHoras(estagio, dia, 6);
+            }
+            dia = dia.plusDays(1);
+        }
+
+        anexarRelatorioFinal(estagio);
+        anexarAvaliacao(estagio, ValidadorEstagio.RESULTADO_APROVADO);
+
+        assertFalse(estagio.respeitaLimiteDiario());
+        assertTrue(estagio.respeitaLimiteSemanal());
+        assertFalse(ValidadorEstagio.podeEncerrar(estagio));
+        assertTrue(ValidadorEstagio.listarPendenciasEncerramento(estagio)
+                .contains("Carga horária diária: limite de 6h excedido"));
+    }
+
+    @Test
+    void naoDevePermitirEncerrarQuandoLimiteSemanalForExcedido() {
+        Estagio estagio = criarEstagioAtivoObrigatorio();
+
+        for (int dia = 0; dia < 6; dia++) {
+            registrarHoras(estagio, DATA_INICIO.plusDays(dia), 6);
+        }
+
+        LocalDate data = DATA_INICIO.plusWeeks(1);
+        while (estagio.calcularHorasRealizadas() < ValidadorEstagio.CARGA_HORARIA_MINIMA_OBRIGATORIO) {
+            if (data.getDayOfWeek() != DayOfWeek.SATURDAY && data.getDayOfWeek() != DayOfWeek.SUNDAY) {
+                registrarHoras(estagio, data, 6);
+            }
+            data = data.plusDays(1);
+        }
+
+        anexarRelatorioFinal(estagio);
+        anexarAvaliacao(estagio, ValidadorEstagio.RESULTADO_APROVADO);
+
+        assertTrue(estagio.respeitaLimiteDiario());
+        assertFalse(estagio.respeitaLimiteSemanal());
+        assertFalse(ValidadorEstagio.podeEncerrar(estagio));
+        assertTrue(ValidadorEstagio.listarPendenciasEncerramento(estagio)
+                .contains("Carga horária semanal: limite de 30h excedido"));
+    }
+
+    @Test
     void devePermitirEncerrarObrigatorioComRequisitosCumpridos() {
         Estagio estagio = criarEstagioProntoParaEncerrar();
 

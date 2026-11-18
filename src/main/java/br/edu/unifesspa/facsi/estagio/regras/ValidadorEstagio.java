@@ -38,7 +38,9 @@ public class ValidadorEstagio {
                 && estagio.getAvaliacaoEstagio() != null
                 && !estagio.getRegistrosFrequencia().isEmpty()
                 && RESULTADO_APROVADO.equals(estagio.getAvaliacaoEstagio().getResultado())
-                && cumpreCargaHorariaMinima(estagio);
+                && cumpreCargaHorariaMinima(estagio)
+                && estagio.respeitaLimiteDiario()
+                && estagio.respeitaLimiteSemanal();
     }
 
     public static List<String> listarPendenciasEncerramento(Estagio estagio) {
@@ -48,6 +50,12 @@ public class ValidadorEstagio {
         }
         if (estagio.getRegistrosFrequencia().isEmpty()) {
             pendencias.add("Registros de frequência: nenhum registro");
+        }
+        if (!estagio.respeitaLimiteDiario()) {
+            pendencias.add("Carga horária diária: limite de " + Estagio.LIMITE_HORAS_DIARIAS + "h excedido");
+        }
+        if (!estagio.respeitaLimiteSemanal()) {
+            pendencias.add("Carga horária semanal: limite de " + Estagio.LIMITE_HORAS_SEMANAIS + "h excedido");
         }
         if (!cumpreCargaHorariaMinima(estagio)) {
             pendencias.add("Carga horária: " + estagio.calcularHorasRealizadas() + "/"
