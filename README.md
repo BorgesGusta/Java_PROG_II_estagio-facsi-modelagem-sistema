@@ -219,7 +219,7 @@ mvn clean test
 
 ## Testes automatizados
 
-A suíte atual possui **72 testes automatizados**, distribuídos em:
+A suíte atual possui **73 testes automatizados**, distribuídos em:
 
 | Classe de teste | Testes |
 | --- | ---: |
@@ -227,9 +227,9 @@ A suíte atual possui **72 testes automatizados**, distribuídos em:
 | `ValidadorCargaHorariaTest` | 9 |
 | `EstagioTest` | 15 |
 | `DadosExemploTest` | 4 |
-| `MenuEstagioTest` | 1 |
+| `MenuEstagioTest` | 2 |
 | `MenuTest` | 1 |
-| **Total** | **72** |
+| **Total** | **73** |
 
 Os testes cobrem, entre outros cenários:
 
@@ -246,7 +246,7 @@ Os testes cobrem, entre outros cenários:
 - data de encerramento;
 - bloqueio de encerramento com carga horária irregular.
 
-Última validação manual desta versão: **72 testes executados, 0 falhas e 0 erros**.
+Última validação desta versão: **73 testes executados, 0 falhas e 0 erros**, incluindo teste de integração do fluxo de terminal.
 
 ## Modelagem e UML
 
