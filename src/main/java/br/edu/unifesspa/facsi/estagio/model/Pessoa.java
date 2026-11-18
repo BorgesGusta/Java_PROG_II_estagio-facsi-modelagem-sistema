@@ -1,12 +1,24 @@
 package br.edu.unifesspa.facsi.estagio.model;
 
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
+
+@MappedSuperclass
 public abstract class Pessoa {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String nome;
     private String cpf;
     private String email;
     private String telefone;
+
+    protected Pessoa() {
+    }
 
     protected Pessoa(Long id, String nome, String cpf, String email, String telefone) {
         this.id = id;

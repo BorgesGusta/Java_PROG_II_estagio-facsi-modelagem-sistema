@@ -1,10 +1,19 @@
 package br.edu.unifesspa.facsi.estagio.model;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "alunos")
 public class Aluno extends Pessoa {
 
     private String matricula;
     private String curso;
     private String situacaoAcademica;
+
+    protected Aluno() {
+        super();
+    }
 
     public Aluno(
             Long id,
